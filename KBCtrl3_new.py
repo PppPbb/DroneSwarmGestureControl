@@ -58,7 +58,7 @@ followers = ["UAV1", "UAV3"]
 forward_mode = False
 formation_mode = "triangle"
 
-forward_speed = 2.0
+forward_speed = 1.0
 yaw_rate = 5.0
 vertical_speed = 1.0
 
