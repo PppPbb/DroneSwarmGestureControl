@@ -1,0 +1,139 @@
+{
+  "SeeDocsAt": "https://github.com/Microsoft/AirSim/blob/main/docs/settings.md",
+  "SettingsVersion": 1.2,
+  "SimMode": "Multirotor",
+  "ViewMode": "FlyWithMe",
+  "SubWindows": [
+    {
+      "WindowID": 0,
+      "ImageType": 0,
+      "CameraName": "fpv_camera",
+      "VehicleName": "UAV1",
+      "Visible": true,
+      "WindowPosition": {
+        "X": 0,
+        "Y": 0
+      },
+      "WindowSize": {
+        "Width": 320,
+        "Height": 240
+      }
+    },
+    {
+      "WindowID": 1,
+      "ImageType": 0,
+      "CameraName": "fpv_camera",
+      "VehicleName": "UAV2",
+      "Visible": true,
+      "WindowPosition": {
+        "X": 320,
+        "Y": 0
+      },
+      "WindowSize": {
+        "Width": 320,
+        "Height": 240
+      }
+    },
+    {
+      "WindowID": 2,
+      "ImageType": 0,
+      "CameraName": "fpv_camera",
+      "VehicleName": "UAV3",
+      "Visible": true,
+      "WindowPosition": {
+        "X": 640,
+        "Y": 0
+      },
+      "WindowSize": {
+        "Width": 320,
+        "Height": 240
+      }
+    }
+  ],
+  "Vehicles": {
+    "UAV1": {
+      "VehicleType": "SimpleFlight",
+      "X": 0,
+      "Y": 0,
+      "Z": 0,
+      "Cameras": {
+        "fpv_camera": {
+          "CaptureSettings": [
+            {
+              "ImageType": 0,
+              "Width": 320,
+              "Height": 240
+            }
+          ],
+          "X": 0.5,
+          "Y": 0,
+          "Z": 0.1,
+          "Pitch": -20,
+          "Roll": 0,
+          "Yaw": 0
+        },
+        "top_camera": {
+          "CaptureSettings": [
+            {
+              "ImageType": 0,
+              "Width": 320,
+              "Height": 240
+            }
+          ],
+          "X": 0,
+          "Y": 0,
+          "Z": 5,
+          "Pitch": -90,
+          "Roll": 0,
+          "Yaw": 0
+        }
+      }
+    },
+    "UAV2": {
+      "VehicleType": "SimpleFlight",
+      "X": 5,
+      "Y": 0,
+      "Z": 0,
+      "Cameras": {
+        "fpv_camera": {
+          "CaptureSettings": [
+            {
+              "ImageType": 0,
+              "Width": 320,
+              "Height": 240
+            }
+          ],
+          "X": 0.5,
+          "Y": 0,
+          "Z": 0.1,
+          "Pitch": -20,
+          "Roll": 0,
+          "Yaw": 0
+        }
+      }
+    },
+    "UAV3": {
+      "VehicleType": "SimpleFlight",
+      "X": 10,
+      "Y": 0,
+      "Z": 0,
+      "Cameras": {
+        "fpv_camera": {
+          "CaptureSettings": [
+            {
+              "ImageType": 0,
+              "Width": 320,
+              "Height": 240
+            }
+          ],
+          "X": 0.5,
+          "Y": 0,
+          "Z": 0.1,
+          "Pitch": -20,
+          "Roll": 0,
+          "Yaw": 0
+        }
+      }
+    }
+  }
+}
