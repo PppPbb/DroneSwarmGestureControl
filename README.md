@@ -6,6 +6,19 @@ HandGestureRecog.py for hand gesture recognization on mac, based on Mediapipe, p
 swarm_bridge.py for swarm control on windows, UE4.27 + python3.7 + Airsim1.8.1 + VS2022 (CityPark.sln)
 Communication between macOS and Windows is implemented using OSC (Open Sound Control) protocol over UDP.
 <img width="3822" height="2506" alt="gzl" src="https://github.com/user-attachments/assets/b47fb47e-706b-47bc-9e83-a2b4c95d5c74" />
++-------------------+        OSC / UDP       +----------------------+
+|   macOS           |  ------------------>   |   Windows PC         |
+|                   |                        |                      |
+| HandGestureRecog  |                        |  swarm_bridge.py     |
+| (MediaPipe)       |                        |  AirSim Client       |
+|                   |                        |                      |
++-------------------+                        +----------+-----------+
+                                                         |
+                                                         |
+                                                +--------v--------+
+                                                |   UE4 + AirSim  |
+                                                |  UAV1 UAV2 UAV3 |
+                                                +-----------------+
 
 
 requirements and environments are not uploaded
