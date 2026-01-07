@@ -5,7 +5,8 @@ settings.json show basic UAVswarm settings
 HandGestureRecog.py for hand gesture recognization on mac, based on Mediapipe, python3.9
 swarm_bridge.py for swarm control on windows, UE4.27 + python3.7 + Airsim1.8.1 + VS2022 (CityPark.sln)
 Communication between macOS and Windows is implemented using OSC (Open Sound Control) protocol over UDP.
-  <img width="20720" height="11864" alt="工作流" src="https://github.com/user-attachments/assets/936ecf5a-f66d-4384-8d53-1449073b5bb6" />
+<img width="3822" height="2506" alt="gzl" src="https://github.com/user-attachments/assets/b47fb47e-706b-47bc-9e83-a2b4c95d5c74" />
+
 
 requirements and environments are not uploaded
 
