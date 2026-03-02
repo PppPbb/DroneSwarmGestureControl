@@ -1,22 +1,28 @@
+"""
+File Name: HandGestureRecog.py
+Runs on: Mac
+Function: Hand gesture recognition, and sending commands to Windows
+"""
+
 import cv2
 import mediapipe as mp
 import numpy as np
 import math
 from pythonosc import udp_client
 
-# ================= 配置区域 =================
-# 【重要】请确认 Windows 电脑 IP
-UE_IP = " 192.168.59.143"
+# ================= Configuration Area =================
+# [IMPORTANT] Please confirm the Windows PC IP
+UE_IP = "192.168.59.143"
 UE_PORT = 8000
 
-# 状态常量
+# State Constants
 MODE_HOVER = 0
 MODE_CRUISE = 1
 MODE_SPEED_SET = 2
 MODE_SINGLE_SELECT = 3
 
-# 防抖阈值
-GESTURE_CONFIRM_FRAMES = 10  # 降低帧数，提高队形识别响应速度
+# Debounce Threshold
+GESTURE_CONFIRM_FRAMES = 10  # Lower frame count to improve formation recognition response speed
 
 class FinalDroneController:
     def __init__(self):
@@ -30,7 +36,7 @@ class FinalDroneController:
         self.mp_draw = mp.solutions.drawing_utils
         self.osc_client = udp_client.SimpleUDPClient(UE_IP, UE_PORT)
 
-        # 核心状态
+        # Core States
         self.flight_mode = MODE_HOVER
         self.last_flight_mode = MODE_HOVER
         
@@ -39,29 +45,29 @@ class FinalDroneController:
         self.drone_id = 0
         self.formation = "TRIANGLE"
 
-        # 计数器
+        # Counters
         self.left_history = None
         self.left_count = 0
         self.right_history = None
         self.right_count = 0
         
-        # 瞬时反馈计时 (用于显示队形切换成功)
+        # Instant feedback timer (used to display successful formation switch)
         self.feedback_timer = 0
         self.feedback_msg = ""
 
-        # ================= 战术控制参数 =================
-        # 定义静止区间 (Deadzone)
+        # ================= Tactical Control Parameters =================
+        # Define Deadzone
         self.CALIB_PITCH_MIN = -10.0
         self.CALIB_PITCH_MAX = 5.0
         self.CALIB_YAW_MIN = -10.0
         self.CALIB_YAW_MAX = 5.0
 
-        # 灵敏度
-        self.SENS_PITCH = 0.05 # 升降灵敏度
-        self.SENS_YAW = 0.05   # 转向灵敏度
+        # Sensitivity
+        self.SENS_PITCH = 0.05 # Ascent/Descent Sensitivity
+        self.SENS_YAW = 0.05   # Yaw/Turning Sensitivity
 
     def _get_fingers(self, lm, label):
-        """获取5指状态"""
+        """Get 5-finger state"""
         fingers = []
         tips = [8, 12, 16, 20]
         bases = [6, 10, 14, 18]
@@ -76,26 +82,26 @@ class FinalDroneController:
         return fingers
 
     def classify_gesture(self, lm, label):
-        """手势分类器"""
+        """Gesture Classifier"""
         fingers = self._get_fingers(lm, label)
         count = fingers.count(True)
         
-        # 1. 握拳 (FIST)
+        # 1. Fist (FIST)
         if not any(fingers[1:]):
             if fingers[0]: return "THUMB_ONLY", 1
             return "FIST", 0
             
-        # 2. 全掌 (PALM)
+        # 2. Full Palm (PALM)
         if count == 5: return "PALM", 5
 
-        # 3. 数字/通用指 (1-4)
-        # 无论左右手，都识别基础数字手势，用于组合判断
+        # 3. Numbers/Common fingers (1-4)
+        # Recognize basic number gestures for both hands, used for combination logic
         if count == 1 and fingers[1]: return "ONE", 1
         if count == 2 and fingers[1] and fingers[2]: return "TWO", 2
         if count == 3 and fingers[1] and fingers[2] and fingers[3]: return "THREE", 3
         if count == 4: return "FOUR", 4
 
-        # 4. 左手特殊功能 (保留原有)
+        # 4. Left hand special functions (retain original)
         if label == "Left":
             if fingers[0] and fingers[1] and not fingers[2]: return "GUN_L", 0
             if fingers[1] and fingers[4] and not fingers[2]: return "SPIDERMAN", 0
@@ -104,7 +110,7 @@ class FinalDroneController:
         return "UNKNOWN", count
 
     def calculate_pose(self, lm):
-        """右手姿态解算"""
+        """Right hand pose calculation"""
         p0 = np.array([lm[0].x, lm[0].y, lm[0].z])
         p5 = np.array([lm[5].x, lm[5].y, lm[5].z])
         p17 = np.array([lm[17].x, lm[17].y, lm[17].z])
@@ -127,7 +133,7 @@ class FinalDroneController:
         cv2.line(frame, (cx, cy - axis_len), (cx, cy + axis_len), (100, 100, 100), 2)
         cv2.line(frame, (cx - axis_len, cy), (cx + axis_len, cy), (60, 60, 60), 1)
         
-        # 绘制死区框
+        # Draw deadzone box
         y_min = int(self.CALIB_PITCH_MIN * 2.0)
         y_max = int(self.CALIB_PITCH_MAX * 2.0)
         x_min = int(self.CALIB_YAW_MIN * 2.0)
@@ -175,30 +181,30 @@ class FinalDroneController:
         r_lm = hands_data['Right']['lm']
 
         # =========================================================
-        # 1. 队形变换 (优先级最高 | 快速识别 | 状态保持)
+        # 1. Formation Change (Highest priority | Fast recognition | State retention)
         # =========================================================
-        # 只要检测到一帧符合条件，立即切换状态，无需保持手势
+        # Switch state immediately upon detecting a single valid frame, no need to hold the gesture
         
-        # A. 三角形 (△): 双手全掌
+        # A. Triangle (△): Both hands full palm
         if g_left == "PALM" and g_right == "PALM":
             self.formation = "TRIANGLE"
             self.feedback_msg = "FORM: TRIANGLE"
-            self.feedback_timer = 30 # 显示 1.5秒
+            self.feedback_timer = 30 # Display for 1.5 seconds
 
-        # B. 横向一字 (—): 双手食指
+        # B. Horizontal Line (—): Both hands index fingers
         elif g_left == "ONE" and g_right == "ONE":
             self.formation = "LINE_HORIZONTAL"
             self.feedback_msg = "FORM: HORIZONTAL"
             self.feedback_timer = 30
             
-        # C. 纵向一字 (｜): 左手双指 (食指+中指)
+        # C. Vertical Line (｜): Left hand two fingers (Index + Middle)
         elif g_left == "TWO":
             self.formation = "LINE_VERTICAL"
             self.feedback_msg = "FORM: VERTICAL"
             self.feedback_timer = 30
 
         # =========================================================
-        # 2. 左手模式切换 (去抖动处理)
+        # 2. Left hand mode switch (Debouncing)
         # =========================================================
         stable_left = None
         if g_left is not None and g_left != "UNKNOWN":
@@ -225,9 +231,9 @@ class FinalDroneController:
                 self.flight_mode = self.last_flight_mode
 
         # =========================================================
-        # 3. 右手激活与实时控制
+        # 3. Right hand activation and real-time control
         # =========================================================
-        # 右手防抖
+        # Right hand debounce
         if g_right in ["FIST", "PALM"]:
             if g_right == self.right_history: self.right_count += 1
             else:
@@ -240,11 +246,11 @@ class FinalDroneController:
         else:
             self.right_count = 0
 
-        # 构造数据包
+        # Construct data packet
         control_data = {"roll": 0.0, "pitch": 0.0, "yaw": 0.0, "throttle": 0.0}
         
         if self.right_hand_active and g_right:
-            # 瞬时调节模式
+            # Instant adjustment mode
             if self.flight_mode == MODE_SPEED_SET:
                 if 1 <= hands_data['Right']['val'] <= 5: self.speed_level = hands_data['Right']['val']
             
@@ -261,7 +267,7 @@ class FinalDroneController:
                     self.feedback_timer = 40
                     self.flight_mode = self.last_flight_mode
             
-            # === C. 飞行核心逻辑 (定速 + 垂直升降) ===
+            # === C. Core Flight Logic (Cruise control + Vertical ascent/descent) ===
             else:
                 if g_right == "FIST":
                     self.feedback_msg = "!!! EMERGENCY !!!"
@@ -270,32 +276,32 @@ class FinalDroneController:
                 else:
                     r, p, y = self.calculate_pose(r_lm)
                     
-                    # --- 1. Pitch (俯仰) -> 仅控制垂直升降 (VZ) ---
-                    # 彻底解耦：Pitch 不再影响前进速度
+                    # --- 1. Pitch -> Controls vertical ascent/descent only (VZ) ---
+                    # Completely decoupled: Pitch no longer affects forward speed
                     val_pitch = 0.0
-                    if p < self.CALIB_PITCH_MIN:   # 手翘起 -> 上升
+                    if p < self.CALIB_PITCH_MIN:   # Hand tilts up -> Ascend
                         val_pitch = (p - self.CALIB_PITCH_MIN) * self.SENS_PITCH
-                    elif p > self.CALIB_PITCH_MAX: # 手压下 -> 下降
+                    elif p > self.CALIB_PITCH_MAX: # Hand tilts down -> Descend
                         val_pitch = (p - self.CALIB_PITCH_MAX) * self.SENS_PITCH
                     
-                    # --- 2. Yaw (偏航) -> 左右转向 ---
+                    # --- 2. Yaw -> Left/Right turning ---
                     val_yaw = 0.0
                     if y < self.CALIB_YAW_MIN: val_yaw = (y - self.CALIB_YAW_MIN) * self.SENS_YAW
                     elif y > self.CALIB_YAW_MAX: val_yaw = (y - self.CALIB_YAW_MAX) * self.SENS_YAW
 
                     control_data = {
                         "roll": 0.0,
-                        "pitch": val_pitch, # Windows端将其作为升降速度
+                        "pitch": val_pitch, # Windows side treats this as vertical speed
                         "yaw": val_yaw,
                         "throttle": 0.0
                     }
                     
-                    # 状态反馈
+                    # State feedback
                     if val_pitch < -0.1: action_str = "ASCEND"
                     elif val_pitch > 0.1: action_str = "DESCEND"
                     else: action_str = "ALT HOLD"
                     
-                    # 提示：前进速度只看 SPEED
+                    # Hint: Forward speed depends only on SPEED
                     if self.flight_mode == MODE_CRUISE:
                         action_str += " + MOVING"
 
@@ -314,7 +320,7 @@ class FinalDroneController:
         cv2.putText(frame, f"MODE: {mode_names[self.flight_mode]}", (20, 40),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
         
-        # 只有在巡航模式下，速度才生效，标红提示
+        # Speed is only active in cruise mode, highlight accordingly
         spd_col = (0, 255, 255) if self.flight_mode == MODE_CRUISE else (100, 100, 100)
         cv2.putText(frame, f"SPEED: {self.speed_level}", (20, 80),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, spd_col, 2)
