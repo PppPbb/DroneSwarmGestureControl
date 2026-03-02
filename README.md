@@ -19,7 +19,6 @@ requirements and environments are not uploaded
 | Flight Control | Hover / Cruise Mode Switching          |
 | Swarm Control  | Formation Transformation               |
 | Speed Control  | Multi-level Velocity Adjustment        |
-| Selection      | Single-Drone Deployment                |
 | Safety         | Control Lock / Unlock                  |
 
 # Swarm Formation Modes:
