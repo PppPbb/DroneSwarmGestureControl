@@ -32,7 +32,7 @@ UAV2 as leader, UAV1 and UAV3 as follower
 This system adopts a dual-hand gesture interaction paradigm for real-time drone swarm control.
 - The **left hand** is primarily used for high-level commands, such as flight mode switching, formation reconfiguration, and system state control.
 - The **right hand** is responsible for continuous motion control, including orientation and velocity modulation.
-The current gesture set is **under active development and iterative refinement**.
+<img width="4751" height="1649" alt="Frame 10" src="https://github.com/user-attachments/assets/6b902a51-2bf6-43ab-823f-2c746dbd58d3" />
 
 # Each control message contains:
 [ mode, speed, formation, drone_id, roll, pitch, yaw, throttle ]
